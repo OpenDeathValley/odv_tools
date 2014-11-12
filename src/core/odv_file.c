@@ -38,14 +38,45 @@ struct ODVFile *odv_file_open(char *filename)
         return NULL;
     }
     return file;
-
 }
 
 #else
 
 struct ODVFile *odv_file_open(char *filename)
 {
-    return NULL;
+    struct ODVFile *file = NULL;
+	struct stat st;
+
+    if (filename == NULL)
+        return NULL;
+    file = (struct ODVFile*)malloc(sizeof (struct ODVFile));
+    if (file == NULL) {
+        fprintf(stderr, "[-] odv_file_open - malloc failed\n");
+        return NULL;
+    }
+    memset(file, 0, sizeof (struct ODVFile));
+    strncpy(file->filename, filename, FILENAME_MAX - 1);
+	file->fd = open(filename, O_RDONLY);
+	if (file->fd == -1) {
+		fprintf(stderr, "[-] odv_file_open - open failed\n");
+		free(file);
+		return NULL;
+	}
+   	if (fstat(file->fd, &st) == -1) {
+		fprintf(stderr, "[-] odv_file_open - fstat failed\n");
+		close(file->fd);
+		free(file);
+		return NULL;
+	}
+	file->length = st.st_size;
+	if ((file->buf = mmap (NULL, file->length, PROT_READ, MAP_PRIVATE,
+				file->fd, 0)) == MAP_FAILED) {
+		fprintf(stderr, "[-] odv_file_open - fstat failed\n");
+		close(file->fd);
+		free(file);
+		return NULL;
+	}
+    return file;
 }
 
 #endif
@@ -106,8 +137,10 @@ int odv_file_close(struct ODVFile *file)
     CloseHandle(file->map);
     UnmapViewOfFile(file->buf);
 #else
-
+	munmap(file->buf, file->length);
+	close(file->fd);
 #endif
+	free(file);
     return 1;
 }
 

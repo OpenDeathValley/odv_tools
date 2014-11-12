@@ -5,8 +5,7 @@ struct ODVResourceFile *odv_resource_open(char *filename)
     struct ODVFile *file = NULL;
     struct ODVResourceFile *rfile = NULL;
 
-    /* file = odv_file_open(filename); */
-    file = odv_file_open_win(filename);
+    file = odv_file_open(filename);
     if (file == NULL) {
         fprintf(stderr, "[-] odv_open_resource - odv_file_open failed\n");
         return NULL;
@@ -14,15 +13,13 @@ struct ODVResourceFile *odv_resource_open(char *filename)
     rfile = (struct ODVResourceFile*)malloc(sizeof (struct ODVResourceFile));
     if (rfile == NULL) {
         fprintf(stderr, "[-] odv_open_resource - malloc failed\n");
-        /* odv_file_close(file); */
-        odv_file_close_win(file);
+        odv_file_close(file);
         return NULL;
     }
     memset(rfile, 0, sizeof (struct ODVResourceFile));
     rfile->file = file;
     if (odv_resource_read_header(rfile) == 0) {
-        /* odv_file_close(file); */
-        odv_file_close_win(file);
+        odv_file_close(file);
         free(rfile);
         rfile = NULL;
     }
@@ -66,7 +63,7 @@ void odv_resource_close(struct ODVResourceFile *rfile)
     if (rfile == NULL)
         return;
     if (rfile->file != NULL)
-        odv_file_close_win(rfile->file);
+        odv_file_close(rfile->file);
     if (rfile->type != NULL) {
         for (i = 0; i < rfile->header.nbtypeentry; i++) {
             if (rfile->type[i] != NULL)

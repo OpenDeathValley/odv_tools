@@ -27,7 +27,7 @@ struct ODVResourceTypeHeader
 
 struct ODVResourceType
 {
-    struct ODVResourceTypeHeader;
+    struct ODVResourceTypeHeader header;
     void *data;
 };
 
