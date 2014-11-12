@@ -1,6 +1,8 @@
-#include "odv_file_stream.h"
+#include "odv_file.h"
 
-struct ODVFile *odv_file_open_win(char *filename)
+#ifdef WINDOWS
+
+struct ODVFile *odv_file_open(char *filename)
 {
     struct ODVFile *file = NULL;
 
@@ -36,37 +38,17 @@ struct ODVFile *odv_file_open_win(char *filename)
         return NULL;
     }
     return file;
+
 }
+
+#else
 
 struct ODVFile *odv_file_open(char *filename)
 {
-    printf("[-] odv_file_open - deprecated\n");
-    /*struct ODVFile *file = NULL;
-    FILE *fp = NULL;
-    struct stat buf;
-
-    if (filename == NULL)
-        return NULL;
-    fp = fopen(filename, "rb");
-    if (fp == NULL) {
-        fprintf(stderr, "[-] odv_file_open - fopen failed\n");
-        return NULL;
-    }
-    file = (struct ODVFile*)malloc(sizeof (struct ODVFile));
-    if (file == NULL) {
-        fprintf(stderr, "[-] odv_file_open - malloc failed\n");
-        fclose(fp);
-        return NULL;
-    }
-    memset(file, 0, sizeof (struct ODVFile));
-    strncpy(file->filename, filename, FILENAME_MAX - 1);
-    file->fp = fp;
-    fstat(fileno(fp), &buf);
-    file->length = buf.st_size;
-    file->pos = 0;
-    return file;*/
     return NULL;
 }
+
+#endif
 
 int odv_file_read(struct ODVFile *file, void *buf, size_t count)
 {
@@ -117,15 +99,19 @@ void odv_file_seek(struct ODVFile *file, unsigned int offset)
 
 int odv_file_close(struct ODVFile *file)
 {
-    printf("[-] odv_file_close - deprecated\n");
     if (file == NULL)
         return 0;
-    /* fclose(file->fp); */
-    free(file);
+#ifdef WINDOWS
+    CloseHandle(file->file);
+    CloseHandle(file->map);
+    UnmapViewOfFile(file->buf);
+#else
+
+#endif
     return 1;
 }
 
-int odv_file_close_win(struct ODVFile *file)
+/*int odv_file_close_win(struct ODVFile *file)
 {
     if (file == NULL)
         return 0;
@@ -133,7 +119,7 @@ int odv_file_close_win(struct ODVFile *file)
     CloseHandle(file->map);
     UnmapViewOfFile(file->buf);
     return 1;
-}
+}*/
 
 void odv_file_info(struct ODVFile *file)
 {

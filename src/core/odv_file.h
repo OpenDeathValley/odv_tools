@@ -10,14 +10,6 @@
 
 #include <windows.h>
 
-// cmake
-// CHECK_FUNCTION_EXISTS(_fileno HAVE__FILENO)
-// #cmakedefine HAVE__FILENO
-
-#if defined(HAVE__FILENO)
-#define fileno _fileno
-#endif
-
 struct ODVFile
 {
     char filename[FILENAME_MAX];
@@ -25,9 +17,12 @@ struct ODVFile
     unsigned int length;
     unsigned int pos;
 
-    /* WINDOWS */
+#ifdef WINDOWS
     HANDLE file;
     HANDLE map;
+#else
+    int fd;
+#endif
 };
 
 struct ODVFile *odv_file_open(char *filename);

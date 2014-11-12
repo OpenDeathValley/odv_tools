@@ -1,20 +1,12 @@
 set(INCROOT ${CMAKE_SOURCE_DIR}/src/core)
 set(SRCROOT ${CMAKE_SOURCE_DIR}/src/core)
 
-set(SRC
-	${SRCROOT}/odv_file_stream.h
+set(HEADER_FILES
+	${INCROOT}/odv_file.h
 )
 
-if (WIN32)
-	set(SRC
-		${SRC}
-		${SRCROOT}/win_odv_file_stream.c
-	)
-else ()
-	set(SRC
-		${SRC}
-		${SRCROOT}/unix_odv_file_stream.c
-	)
-endif ()
+set(SRC_FILES
+	${SRCROOT}/odv_file.c
+)
 
-add_library(core ${SRC})
+add_library(core ${HEADER_FILES} ${SRC_FILES})
