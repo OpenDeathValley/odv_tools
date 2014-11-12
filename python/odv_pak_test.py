@@ -13,10 +13,10 @@ def handle_pak(filename):
         height = b.GetWord()
         type_picture = b.GetDword()
         length = b.GetDword()
-        print "[+] width = %04X" % width
-        print "[+] height = %04X" % height
-        print "[+] type_picture = %08X" % type_picture
-        print "[+] length = %08X" % length
+        print "[+] width        = 0x%04X" % width
+        print "[+] height       = 0x%04X" % height
+        print "[+] type_picture = 0x%08X" % type_picture
+        print "[+] length       = 0x%08X" % length
         data = b.GetBufferSize(length)
         data_u = bz2.decompress(data)
         img = Image.new('RGB', (height, width), "black")
