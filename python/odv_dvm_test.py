@@ -20,15 +20,15 @@ def handle_dvm(filename):
     b = Buffer(open(filename, "rb").read())
     width = b.GetWord()
     height = b.GetWord()
-    type_picture = b.GetDword()
+    type_compression = b.GetDword()
     length = b.GetDword()
     data = b.GetBufferSize(length)
     data_u = bz2.decompress(data)
-    print "[+] width        = 0x%04X" % width
-    print "[+] height       = 0x%04X" % height
-    print "[+] type_picture = 0x%08X" % type_picture
-    print "[+] length       = 0x%08X" % length
-    print "[+] length_u     = 0x%08X" % len(data_u)
+    print "[+] width            = 0x%04X" % width
+    print "[+] height           = 0x%04X" % height
+    print "[+] type_compression = 0x%08X" % type_compression
+    print "[+] length           = 0x%08X" % length
+    print "[+] length_u         = 0x%08X" % len(data_u)
     img = Image.new('RGB', (height, width), "black")
     pixels = img.load()
     for i in range(img.size[0]):
