@@ -1,4 +1,4 @@
-#include "ODVFile.h"
+#include "odv_file_stream.h"
 
 struct ODVFile *odv_file_open_win(char *filename)
 {

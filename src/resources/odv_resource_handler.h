@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "ODVFile.h"
+#include "odv_file_stream.h"
 
 #define RESOURCE_SIGNATURE 0x53455253
 #define RESOURCE_VERSION 0x00000100

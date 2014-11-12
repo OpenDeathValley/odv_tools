@@ -1,4 +1,4 @@
-#include "ODVResourceManager.h"
+#include "odv_resource_handler.h"
 
 struct ODVResourceFile *odv_resource_open(char *filename)
 {
