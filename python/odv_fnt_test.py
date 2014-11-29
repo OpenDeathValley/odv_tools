@@ -6,6 +6,7 @@ from odv_utils import Buffer
 from odv_utils import hexdump
 import sys
 import glob
+import ctypes
 
 # Parse FNT: sub_5D0520
 
@@ -45,9 +46,11 @@ def read_image(b, filename="test_fnt.jpg", pixel_tab=[]):
             green = (((color >> 5) & 0x3F) << 8) / 64
             blue = ((color & 0x1F) << 8) / 32
             pixels[i, j] = (red, green, blue)
-    draw_crosshair(pixels, pixel_tab, (76, 255, 0))
+    draw = ImageDraw.Draw(img)
+    for a in pixel_tab:
+        print a
+        draw.rectangle(a, outline=(76, 255, 0))
     img = img.transpose(Image.FLIP_LEFT_RIGHT)
-    #img = img.rotate(90, expand=True)
     img = img.rotate(90)
     img.save(filename, "PNG")
     return b
@@ -80,38 +83,27 @@ def parse_fnt(filename="dialog.fnt"):
     print "[+] nb_entry = 0x%08X" % nb_entry
     if unk_dword_00 >= 0x200:
         unk_dword_05 = b.GetDword()
-        print "[+] unk_dword_05 = %08X (%d)" % (unk_dword_05, unk_dword_05)
     else:
         unk_dword_05 = 0
+    unk_dword_05 = ctypes.c_long(unk_dword_05).value
+    print "[+] unk_dword_05 = %08X (%d)" % (unk_dword_05, unk_dword_05)
     pixel_tab = []
     for i in xrange(0, nb_entry):
         char_value = b.GetWord()
         Y_COORD = b.GetDword()
-        X_COORD = b.GetDword()
+        WIDTH_LETTER = b.GetDword()
         unk_dword_00 = b.GetDword()
         unk_dword_01 = b.GetDword()
-        #if i in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 0x68, nb_entry - 1]:
-        #if i in [1]:
         if char_value < 127:
             print "[+] num = %04X" % i
             print "[+] char_value = 0x%04X (\"%c\")" % (char_value, char_value)
-            print "[+] Y_COORD = 0x%08X" % Y_COORD
-            print "[+] X_COORD = 0x%08X" % X_COORD
+            print "[+] Y_COORD = 0x%08X (%d)" % (Y_COORD, Y_COORD)
+            print "[+] WIDTH_LETTER = 0x%08X (%d)" % (WIDTH_LETTER, WIDTH_LETTER)
             print "[+] unk_dword_00 = 0x%08X" % unk_dword_00
             print "[+] unk_dword_01 = 0x%08X" % unk_dword_01
-            #print "[+] sum = 0x%08X" % (unk_dword_01 + unk_dword_02 + unk_dword_03)
-       # pixel_tab.append((unk_dword_00, unk_dword_01 + unk_dword_02 + unk_dword_03))
-            #print "X = ", X_COORD
-            #print unk_dword_05
-            #print ((X_COORD + unk_dword_05) & 0xffffffff)
-            X_COORD = int((X_COORD + unk_dword_05) & 0xffffffff)
-            #X_COORD = int((X_COORD + unk_dword_05 + unk_dword_00 + unk_dword_01) & 0xffffffff)
-            #sys.exit()
-            #pixel_tab.append((Y_COORD, (X_COORD  + unk_dword_05) & 0xffffffff))
-            pixel_tab.append((Y_COORD, X_COORD))
-            #pixel_tab.append((Y_COORD + unk_dword_04, X_COORD))
-            #pixel_tab.append((Y_COORD + unk_dword_04, X_COORD + unk_dword_03))
-            #print "-" * 20
+            #WIDTH_LETTER = int((WIDTH_LETTER + unk_dword_05 + unk_dword_00 + unk_dword_01) & 0xffffffff)
+            pixel_tab.append([(0, Y_COORD), (unk_dword_02 - 1, Y_COORD + WIDTH_LETTER)])
+    print pixel_tab
     b = read_image(b, filename + "1.png", pixel_tab)
     b = read_image(b, filename + "2.png", pixel_tab)
     print "-" * 20
@@ -119,5 +111,3 @@ def parse_fnt(filename="dialog.fnt"):
 #parse_fnt("buttons_0.fnt")
 for fnt_file in glob.glob('./*.fnt'):
     parse_fnt(fnt_file)
-
-
