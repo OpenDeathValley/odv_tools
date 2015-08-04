@@ -1,0 +1,24 @@
+DLL_NAME = injected.dll
+DIR_SRC = .
+DIR_INCLUDE = "dep\inc"
+DIR_BIN = .\bin
+DIR_OBJ = .\obj
+CFLAGS=/nologo /W4 /WX /O2 /Oi /Oy /MT /c
+LFLAGS=/nologo /dll /SUBSYSTEM:CONSOLE /OSVERSION:5.1 /DYNAMICBASE /NXCOMPAT
+LIBS=kernel32.lib dbghelp.lib user32.lib Ole32.lib .\dep\lib\ddraw.lib .\dep\lib\dxguid.lib
+
+{$(DIR_SRC)}.cpp{$(DIR_OBJ)}.obj ::
+    cl $(CFLAGS) /Fo$(DIR_OBJ)\ /I$(DIR_INCLUDE) $<
+
+$(DLL_NAME): $(DIR_OBJ)\*.obj
+   link /out:$(DIR_BIN)\$(DLL_NAME) $(DIR_OBJ)\*.obj $(LFLAGS) $(LIBS)
+
+create_dirs:
+    @if not exist $(DIR_BIN) mkdir $(DIR_BIN)
+    @if not exist $(DIR_OBJ) mkdir $(DIR_OBJ)
+
+clean:
+    @if exist $(DIR_BIN) rmdir /S /Q $(DIR_BIN)
+    @if exist $(DIR_OBJ) rmdir /S /Q $(DIR_OBJ)
+
+all: clean create_dirs $(DLL_NAME)

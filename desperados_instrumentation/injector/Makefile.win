@@ -1,0 +1,23 @@
+EXECUTABLE_NAME = injector.exe
+DIR_SRC = .
+DIR_INCLUDE = .
+DIR_BIN = .\bin
+DIR_OBJ = .\obj
+CFLAGS=/nologo /W4 /WX /O2 /Oi /Oy /MT /c
+LFLAGS=/nologo /SUBSYSTEM:CONSOLE /OSVERSION:5.1 /FIXED /NXCOMPAT
+    
+{$(DIR_SRC)}.c{$(DIR_OBJ)}.obj ::
+    cl $(CFLAGS) /Fo$(DIR_OBJ)\ /I$(DIR_INCLUDE) $<
+
+$(EXECUTABLE_NAME): $(DIR_OBJ)\*.obj
+   link /out:$(DIR_BIN)\$(EXECUTABLE_NAME) $(DIR_OBJ)\*.obj $(LFLAGS)
+
+create_dirs:
+    @if not exist $(DIR_BIN) mkdir $(DIR_BIN)
+    @if not exist $(DIR_OBJ) mkdir $(DIR_OBJ)
+
+clean:
+    @if exist $(DIR_BIN) rmdir /S /Q $(DIR_BIN)
+    @if exist $(DIR_OBJ) rmdir /S /Q $(DIR_OBJ)
+
+all: clean create_dirs $(EXECUTABLE_NAME)
