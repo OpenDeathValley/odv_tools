@@ -5,7 +5,7 @@ DIR_BIN = .\bin
 DIR_OBJ = .\obj
 CFLAGS=/nologo /W4 /WX /O2 /Oi /Oy /MT /c
 LFLAGS=/nologo /dll /SUBSYSTEM:CONSOLE /OSVERSION:5.1 /DYNAMICBASE /NXCOMPAT
-LIBS=kernel32.lib dbghelp.lib user32.lib Ole32.lib .\dep\lib\ddraw.lib .\dep\lib\dxguid.lib
+LIBS=kernel32.lib dbghelp.lib user32.lib Ole32.lib .\dep\lib\ddraw.lib .\dep\lib\dxguid.lib .\dep\lib\LDE64.lib
 
 {$(DIR_SRC)}.cpp{$(DIR_OBJ)}.obj ::
     cl $(CFLAGS) /Fo$(DIR_OBJ)\ /I$(DIR_INCLUDE) $<

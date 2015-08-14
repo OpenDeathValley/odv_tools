@@ -16,13 +16,13 @@ LONG CALLBACK ProtectionFaultVectoredHandler(PEXCEPTION_POINTERS ExceptionInfo)
             pinfo.DDRawBase = (ULONG_PTR)GetModuleHandleA("DDRAW.dll");
             pinfo.DDRawSize = (ULONG_PTR)ParsePE(pinfo.DDRawBase, SIZE_OF_IMAGE);
             DoHook();
+            MakeHook();
             return EXCEPTION_CONTINUE_EXECUTION;
         }
     }
     else if (ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION) {
         if (!(ExceptionInfo->ContextRecord->Eip >= pinfo.DDRawBase && ExceptionInfo->ContextRecord->Eip <= (pinfo.DDRawBase + pinfo.DDRawSize))) {
             dbg_msg("[+] ProtectionFaultVectoredHandler - EIP           : 0x%08X\n", ExceptionInfo->ContextRecord->Eip);
-            ExitProcess(42);
         }
     }
     return EXCEPTION_CONTINUE_SEARCH;

@@ -104,3 +104,113 @@ VOID DoHook(VOID)
         dbg_msg("[+] ReplaceIATEntryInMod failed for DirectDrawCreate\n");
     }
 }
+
+BOOL SetupHook(char *module, char *name_export, void *Hook_func, void *trampo, DWORD addr)
+{
+    DWORD dwOldProtect;
+    DWORD dwLen = 0;
+    FARPROC Proc;
+    
+    if (addr != 0) {
+        Proc = (FARPROC)addr;
+    }
+    else {
+        Proc = GetProcAddress(GetModuleHandleA(module), name_export);
+        if (!Proc) {
+            dbg_msg("[-] GetProcAddress() failed: %lu\n", GetLastError());
+            return FALSE;
+        }
+    }
+    while (dwLen < 5)
+        dwLen += LDE((BYTE*)Proc + dwLen , LDE_X86);
+    memcpy(trampo, Proc, dwLen);
+    *(BYTE*)((BYTE*)trampo + dwLen) = 0xE9;
+    *(DWORD*)((BYTE*)trampo + dwLen + 1) = (BYTE*)Proc - (BYTE*)trampo - 5;
+    VirtualProtect(Proc, dwLen, PAGE_EXECUTE_READWRITE, &dwOldProtect);
+    *(BYTE*)Proc = 0xE9;
+    *(DWORD*)((char*)Proc + 1) = (BYTE*)Hook_func - (BYTE*)Proc - 5;
+    VirtualProtect(Proc, dwLen, dwOldProtect, &dwOldProtect);
+    return TRUE;
+}
+
+extern DWORD (__stdcall *ResumeScriptEntry)(VOID);
+extern DWORD (__stdcall *ResumeVMEntry)(VOID);
+extern DWORD (__stdcall *ResumeVMExecOpcode)(VOID);
+
+/* 
+.text:00618000 8B 44 24 04             mov     eax, [esp+arg_0]
+.text:00618004 56                      push    esi
+.text:00618005 8B F1                   mov     esi, ecx
+.text:00618007 8B 4E 58                mov     ecx, [esi+58h]
+.text:0061800A 50                      push    eax
+.text:0061800B 51                      push    ecx
+.text:0061800C 8B 4E 04                mov     ecx, [esi+4]
+.text:0061800F E8 1C 08 00 00          call    sub_
+*/
+unsigned char PatternHook_0[20] = {
+    0x8B, 0x44, 0x24, 0x04, 0x56, 0x8B, 0xF1, 0x8B, 0x4E, 0x58, 0x50, 0x51,
+    0x8B, 0x4E, 0x04, 0xE8, 0x1C, 0x08, 0x00, 0x00
+};
+
+
+/*
+.text:00618050 53                                      push    ebx
+.text:00618051 55                                      push    ebp
+.text:00618052 56                                      push    esi
+.text:00618053 83 CB FF                                or      ebx, 0FFFFFFFFh
+.text:00618056 57                                      push    edi
+.text:00618057 8B F1                                   mov     esi, ecx
+.text:00618059 8B FB                                   mov     edi, ebx
+.text:0061805B
+.text:0061805B                         loc_61805B:
+.text:0061805B
+.text:0061805B 8B 4E 58                                mov     ecx, [esi+58h]
+.text:0061805E 8B 46 3C                                mov     eax, [esi+3Ch]
+.text:00618061 8B A9 C0 00 00 00                       mov     ebp, [ecx+0C0h]
+*/
+unsigned char PatternHook_1[20] = {
+    0x53, 0x55, 0x56, 0x83, 0xCB, 0xFF, 0x57, 0x8B, 0xF1, 0x8B, 0xFB, 0x8B,
+    0x4E, 0x58, 0x8B, 0x46, 0x3C, 0x8B, 0xA9, 0xC0
+};
+
+/* 
+.text:0061805B 8B 4E 58                                mov     ecx, [esi+58h]
+.text:0061805E 8B 46 3C                                mov     eax, [esi+3Ch]
+.text:00618061 8B A9 C0 00 00 00                       mov     ebp, [ecx+0C0h]
+.text:00618067 8D 14 40                                lea     edx, [eax+eax*2]
+.text:0061806A 8D 54 95 00                             lea     edx, [ebp+edx*4+0]
+*/
+unsigned char PatternHook_2[20] = {
+    0x8B, 0x4E, 0x58, 0x8B, 0x46, 0x3C, 0x8B, 0xA9, 0xC0, 0x00, 0x00, 0x00,
+    0x8D, 0x14, 0x40, 0x8D, 0x54, 0x95, 0x00, 0x89
+};
+
+
+VOID MakeHook(VOID)
+{
+    if (!memcmp((const void*)0x618000, PatternHook_0, sizeof (PatternHook_0))) {
+        ResumeScriptEntry = (DWORD(__stdcall *)(VOID))VirtualAlloc(0, 0x1000, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+        memset(ResumeScriptEntry, 0x90, 0x1000);
+        SetupHook("MOO", "MOO", &HookScriptEntry, ResumeScriptEntry, 0x618000);
+    }
+    else {
+        dbg_msg("[-] can't match pattern for hooking 0\n");
+    }
+    if (!memcmp((const void*)0x618050, PatternHook_1, sizeof (PatternHook_1))) {
+        ResumeVMEntry = (DWORD(__stdcall *)(VOID))VirtualAlloc(0, 0x1000, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+        memset(ResumeVMEntry, 0x90, 0x1000);
+        SetupHook("MOO", "MOO", &HookVMEntry, ResumeVMEntry, 0x618050);
+    }
+    else {
+        dbg_msg("[-] can't match pattern for hooking 1\n");
+    }    
+    if (!memcmp((const void*)0x0061805B, PatternHook_2, sizeof (PatternHook_2))) {
+        ResumeVMExecOpcode = (DWORD(__stdcall *)(VOID))VirtualAlloc(0, 0x1000, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+        memset(ResumeVMExecOpcode, 0x90, 0x1000);
+        SetupHook("MOO", "MOO", &HookVMExecOpcode, ResumeVMExecOpcode, 0x0061805B);
+    }
+    else {
+        dbg_msg("[-] can't match pattern for hooking 1\n");
+    }
+
+}
